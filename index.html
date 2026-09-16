@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="hy">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ներքին տեղեկատվական հարթակ — հարցում</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="page">
+    <header class="page-header">
+      <span class="logo-chip"><img src="assets/ameriabank-logo.png" alt="Ameriabank" class="brand-logo" /></span>
+      <h1>Ներքին տեղեկատվական հարթակ — հարցում</h1>
+      <p>
+        Մենք ուսումնասիրում ենք մեկ միասնական հարթակ ստեղծելու հնարավորությունը,
+        որտեղ աշխատակիցները կկարողանան արագ գտնել Բանկի պրոդուկտների,
+        ընթացակարգերի, արշավների և նորությունների վերաբերյալ անհրաժեշտ
+        տեղեկատվությունը։ Հնարավոր է՝ հարթակը ներառի նաև AI օգնական, որը
+        կկարողանա ակնթարթորեն պատասխանել հարցերին։ Ձեր պատասխանները կօգնեն մեզ
+        հասկանալ՝ ինչից սկսել։
+      </p>
+    </header>
+
+    <form class="panel" id="survey-form">
+
+      <!-- Q1 -->
+      <div class="field">
+        <label class="field-label">1. Որտե՞ղ եք աշխատում</label>
+        <div class="option-group" role="radiogroup">
+          <label class="option-row">
+            <input type="radio" name="location" value="Մասնաճյուղում" required />
+            <span>Մասնաճյուղում</span>
+          </label>
+          <label class="option-row">
+            <input type="radio" name="location" value="Կոնտակտային կենտրոնում" />
+            <span>Կոնտակտային կենտրոնում</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Q2 -->
+      <div class="field">
+        <label class="field-label">2. Պաշտոն</label>
+        <span class="field-hint" id="role-hint">Նախ ընտրեք վերևում՝ որտեղ եք աշխատում</span>
+
+        <div class="option-group" id="role-branch" hidden>
+          <label class="option-row">
+            <input type="radio" name="role" value="Հաճախորդի մենեջեր" />
+            <span>Հաճախորդի մենեջեր</span>
+          </label>
+          <label class="option-row">
+            <input type="radio" name="role" value="Թվային խորհրդատու" />
+            <span>Թվային խորհրդատու</span>
+          </label>
+          <label class="option-row">
+            <input type="radio" name="role" value="Մասնագետ-գանձապահ" />
+            <span>Մասնագետ-գանձապահ</span>
+          </label>
+          <label class="option-row">
+            <input type="radio" name="role" value="Վարկային մասնագետ" />
+            <span>Վարկային մասնագետ</span>
+          </label>
+          <label class="option-row">
+            <input type="radio" name="role" value="Սպասարկման բաժնի ղեկավար" />
+            <span>Սպասարկման բաժնի ղեկավար</span>
+          </label>
+          <label class="option-row">
+            <input type="radio" name="role" value="Մասնաճյուղի կառավարիչ" />
+            <span>Մասնաճյուղի կառավարիչ</span>
+          </label>
+        </div>
+
+        <div class="option-group" id="role-cc" hidden>
+          <label class="option-row">
+            <input type="radio" name="role" value="Սպասարկման մասնագետ" />
+            <span>Սպասարկման մասնագետ</span>
+          </label>
+          <label class="option-row">
+            <input type="radio" name="role" value="Թիմի ղեկավար" />
+            <span>Թիմի ղեկավար</span>
+          </label>
+          <label class="option-row">
+            <input type="radio" name="role" value="ԿԿ ղեկավար" />
+            <span>ԿԿ ղեկավար</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Q3 -->
+      <div class="field">
+        <label class="field-label" for="name">3. Անուն</label>
+        <span class="field-hint">Ոչ պարտադիր</span>
+        <input type="text" id="name" name="name" autocomplete="name" />
+      </div>
+
+      <!-- Q4 -->
+      <div class="field">
+        <label class="field-label">4. Աշխատանքի ընթացքում որտե՞ղ եք սովորաբար փնտրում անհրաժեշտ տեղեկատվությունը՝ հաճախորդի հարցին պատասխանելու կամ առաջադրանք կատարելու համար։</label>
+        <span class="field-hint">Ընտրեք բոլոր համապատասխան տարբերակները</span>
+        <div class="option-group">
+          <label class="option-row">
+            <input type="checkbox" name="infoSources" value="Intranet portal — ընթացակարգեր, ներքին կանոնակարգեր" />
+            <span>Intranet portal — ընթացակարգեր, ներքին կանոնակարգեր</span>
+          </label>
+          <label class="option-row">
+            <input type="checkbox" name="infoSources" value="Ամերիաբանկի կայք — սակագներ, պայմաններ" />
+            <span>Ամերիաբանկի կայք — սակագներ, պայմաններ</span>
+          </label>
+          <label class="option-row">
+            <input type="checkbox" name="infoSources" id="source-outlook" value="Outlook նամակագրություն" />
+            <span>Outlook նամակագրություն</span>
+          </label>
+          <label class="option-row">
+            <input type="checkbox" name="infoSources" id="source-other-check" value="Այլ" />
+            <span>Այլ</span>
+          </label>
+        </div>
+        <input type="text" id="source-other-text" class="option-other-input" placeholder="Նշեք՝ ինչ" hidden />
+
+        <div class="conditional-block" id="outlook-block" hidden>
+          <label class="field-label">Եթե ընտրել եք Outlook նամակագրություն, ի՞նչ տեսակի տեղեկատվություն եք սովորաբար փնտրում։</label>
+          <span class="field-hint">Ընտրեք բոլոր համապատասխան տարբերակները</span>
+          <div class="option-group">
+            <label class="option-row">
+              <input type="checkbox" name="outlookTypes" value="Ընթացիկ արշավներ և առաջարկներ" />
+              <span>Ընթացիկ արշավներ և առաջարկներ</span>
+            </label>
+            <label class="option-row">
+              <input type="checkbox" name="outlookTypes" value="Ներքին որոշումներ" />
+              <span>Ներքին որոշումներ</span>
+            </label>
+            <label class="option-row">
+              <input type="checkbox" name="outlookTypes" value="Ներքին շրջանառված նամակագրություններ" />
+              <span>Ներքին շրջանառված նամակագրություններ</span>
+            </label>
+            <label class="option-row">
+              <input type="checkbox" name="outlookTypes" value="Իմ համակարգչում պահպանված անհատական նյութեր" />
+              <span>Իմ համակարգչում պահպանված անհատական նյութեր</span>
+            </label>
+            <label class="option-row">
+              <input type="checkbox" name="outlookTypes" id="outlook-other-check" value="Այլ" />
+              <span>Այլ</span>
+            </label>
+          </div>
+          <input type="text" id="outlook-other-text" class="option-other-input" placeholder="Նշեք՝ ինչ" hidden />
+        </div>
+      </div>
+
+      <!-- Q5 -->
+      <div class="field">
+        <label class="field-label">5. Սովորաբար որքան ժամանակ է անհրաժեշտ ճիշտ պատասխանը գտնելու համար։</label>
+        <div class="option-group">
+          <label class="option-row">
+            <input type="radio" name="timeToFind" value="Մեկ րոպեից քիչ" required />
+            <span>Մեկ րոպեից քիչ</span>
+          </label>
+          <label class="option-row">
+            <input type="radio" name="timeToFind" value="Մի քանի րոպե" />
+            <span>Մի քանի րոպե</span>
+          </label>
+          <label class="option-row">
+            <input type="radio" name="timeToFind" value="10 րոպեից ավելի" />
+            <span>10 րոպեից ավելի</span>
+          </label>
+          <label class="option-row">
+            <input type="radio" name="timeToFind" value="Հաճախ նախընտրում եմ հարցնել գործընկերոջս" />
+            <span>Հաճախ նախընտրում եմ հարցնել գործընկերոջս</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Q6 -->
+      <div class="field">
+        <label class="field-label">6. Ձեր կարծիքով ո՞ր տարբերակն է ավելի հարմար օգտագործման համար։</label>
+        <span class="field-hint">Ընտրեք բոլոր համապատասխան տարբերակները</span>
+        <div class="option-group">
+          <label class="option-row">
+            <input type="checkbox" name="preferredSolutions" value="Տեքստային տեղեկատվություն (FAQ)" />
+            <span>Տեքստային տեղեկատվություն (FAQ)</span>
+          </label>
+          <label class="option-row">
+            <input type="checkbox" name="preferredSolutions" value="Հղումներ դեպի աղբյուրները" />
+            <span>Հղումներ դեպի աղբյուրները</span>
+          </label>
+          <label class="option-row">
+            <input type="checkbox" name="preferredSolutions" value="AI չաթբոտ" />
+            <span>AI չաթբոտ</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Q7 -->
+      <div class="field">
+        <label class="field-label">7. Եթե չաթբոտը կարողանար ակնթարթորեն պատասխանել աշխատանքային հարցերին, որքանո՞վ հավանական է, որ կօգտվեիք դրանից։</label>
+        <div class="rating-scale" role="radiogroup">
+          <label class="rating-option"><input type="radio" name="chatbotLikelihood" value="1" required /><span>1</span></label>
+          <label class="rating-option"><input type="radio" name="chatbotLikelihood" value="2" /><span>2</span></label>
+          <label class="rating-option"><input type="radio" name="chatbotLikelihood" value="3" /><span>3</span></label>
+          <label class="rating-option"><input type="radio" name="chatbotLikelihood" value="4" /><span>4</span></label>
+          <label class="rating-option"><input type="radio" name="chatbotLikelihood" value="5" /><span>5</span></label>
+        </div>
+        <div class="rating-endpoints">
+          <span>1 — Բոլորովին հավանական չէ</span>
+          <span>5 — Շատ հավանական է</span>
+        </div>
+      </div>
+
+      <!-- Q8 -->
+      <div class="field">
+        <label class="field-label">8. Ինչպե՞ս կցանկանայիք, որ չաթբոտը պատասխանի Ձեր հարցերին։</label>
+        <span class="field-hint">Ընտրեք բոլոր համապատասխան տարբերակները</span>
+        <div class="option-group">
+          <label class="option-row">
+            <input type="checkbox" name="chatbotAnswerPrefs" value="Պատասխանի հետ նշի սկզբնաղբյուր փաստաթղթի հղումը" />
+            <span>Պատասխանի հետ նշի սկզբնաղբյուր փաստաթղթի հղումը</span>
+          </label>
+          <label class="option-row">
+            <input type="checkbox" name="chatbotAnswerPrefs" value="Միևնույն է, ես ինքս կստուգեմ ամբողջ տեղեկատվությունը" />
+            <span>Միևնույն է, ես ինքս կստուգեմ ամբողջ տեղեկատվությունը</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Q9 -->
+      <div class="field">
+        <label class="field-label" for="starting-source">9. Եթե համակարգը սկսելու համար անհրաժեշտ լիներ ընտրել միայն մեկ տեղեկատվական աղբյուր, ո՞րն կցանկանայիք, որ դա լիներ։</label>
+        <textarea id="starting-source" name="startingSource" required></textarea>
+      </div>
+
+      <!-- Q10 -->
+      <div class="field">
+        <label class="field-label" for="other-notes">10. Կա՞ որևէ այլ բան, որը պետք է իմանանք այս համակարգը նախագծելուց առաջ։</label>
+        <span class="field-hint">Ոչ պարտադիր</span>
+        <textarea id="other-notes" name="otherNotes"></textarea>
+      </div>
+
+      <div class="field">
+        <button type="submit" class="primary" id="submit-btn">Ուղարկել</button>
+        <p id="status" class="status" role="status" aria-live="polite"></p>
+      </div>
+    </form>
+  </main>
+
+  <script src="submit.js"></script>
+</body>
+</html>

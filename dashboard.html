@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="hy">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Հարցման արդյունքներ</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="page wide">
+    <header class="page-header">
+      <span class="logo-chip"><img src="assets/ameriabank-logo.png" alt="Ameriabank" class="brand-logo" /></span>
+      <h1>Հարցման արդյունքներ</h1>
+      <p>Ներքին տեղեկատվական հարթակի հետազոտական հարցման բոլոր պատասխանները։</p>
+    </header>
+
+    <div id="stats-row" class="stats-row"></div>
+
+    <div class="toolbar">
+      <div class="toolbar-group">
+        <button id="refresh-btn" class="secondary">Թարմացնել</button>
+      </div>
+      <div class="toolbar-group">
+        <select id="location-filter" aria-label="Ֆիլտրել ըստ աշխատավայրի">
+          <option value="">Բոլոր աշխատավայրերը</option>
+          <option value="Մասնաճյուղում">Մասնաճյուղում</option>
+          <option value="Կոնտակտային կենտրոնում">Կոնտակտային կենտրոնում</option>
+        </select>
+        <button id="export-csv-btn" class="secondary">Արտահանել CSV</button>
+      </div>
+    </div>
+
+    <p id="status" class="status" role="status" aria-live="polite"></p>
+
+    <div id="question-groups" class="question-groups"></div>
+  </main>
+
+  <script src="dashboard.js"></script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+{
+  "name": "info-hub-survey",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Discovery survey for branch and contact-center staff about a future internal info hub + AI assistant.",
+  "scripts": {
+    "dev": "netlify dev"
+  },
+  "dependencies": {
+    "@netlify/blobs": "latest"
+  }
+}
