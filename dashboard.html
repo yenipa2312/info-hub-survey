@@ -14,10 +14,13 @@
       <p>Ներքին տեղեկատվական հարթակի հետազոտական հարցման բոլոր պատասխանները։</p>
     </header>
 
+    <div id="summary-panel" class="panel summary-panel" hidden></div>
+
     <div id="stats-row" class="stats-row"></div>
 
     <div class="toolbar">
       <div class="toolbar-group">
+        <button id="analyze-btn" class="primary">Վերլուծել բաց պատասխանները</button>
         <button id="refresh-btn" class="secondary">Թարմացնել</button>
       </div>
       <div class="toolbar-group">
@@ -25,6 +28,18 @@
           <option value="">Բոլոր աշխատավայրերը</option>
           <option value="Մասնաճյուղում">Մասնաճյուղում</option>
           <option value="Կոնտակտային կենտրոնում">Կոնտակտային կենտրոնում</option>
+        </select>
+        <select id="role-filter" aria-label="Ֆիլտրել ըստ պաշտոնի">
+          <option value="">Բոլոր պաշտոնները</option>
+          <option value="Հաճախորդի մենեջեր">Հաճախորդի մենեջեր</option>
+          <option value="Թվային խորհրդատու">Թվային խորհրդատու</option>
+          <option value="Մասնագետ-գանձապահ">Մասնագետ-գանձապահ</option>
+          <option value="Վարկային մասնագետ">Վարկային մասնագետ</option>
+          <option value="Սպասարկման բաժնի ղեկավար">Սպասարկման բաժնի ղեկավար</option>
+          <option value="Մասնաճյուղի կառավարիչ">Մասնաճյուղի կառավարիչ</option>
+          <option value="Սպասարկման մասնագետ">Սպասարկման մասնագետ</option>
+          <option value="Թիմի ղեկավար">Թիմի ղեկավար</option>
+          <option value="ԿԿ ղեկավար">ԿԿ ղեկավար</option>
         </select>
         <button id="export-csv-btn" class="secondary">Արտահանել CSV</button>
       </div>

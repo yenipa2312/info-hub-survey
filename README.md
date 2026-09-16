@@ -7,10 +7,13 @@ news) with a possible AI chatbot. Two pages:
 - **`index.html`** — the Armenian survey (10 questions, with branching:
   Q1 location filters Q2's role list; Q4 selecting "Outlook նամակագրություն"
   reveals a sub-question). Public link, no login.
-- **`dashboard.html`** — results view. Stat tiles, a bar-chart breakdown for
-  every closed question, and the two open-text questions (9 and 10) listed
-  in full with respondent role/location. Filter by location, export
-  everything as CSV.
+- **`dashboard.html`** — results view. A written executive summary at the
+  top, stat tiles, a bar-chart breakdown for every closed question, and
+  the two open-text questions (9 and 10) — click **Վերլուծել բաց
+  պատասխանները** to have Claude turn them into metrics too (Q9 into a
+  fixed content category, Q10 into free-form topic clusters), with the
+  raw answers still listed underneath for reference. Filter by location
+  and/or role together, export everything as CSV.
 
 ## Design
 
@@ -27,10 +30,13 @@ mode default, dark mode via `prefers-color-scheme`.
 - `netlify/functions/submit.js` — the survey posts here
 - `netlify/functions/list.js` — dashboard reads all stored responses;
   aggregation (tallies, bar charts) happens client-side in `dashboard.js`
-- No Claude API calls in this project (unlike `feedback-triage-tool`) —
-  it's a closed-question survey, nothing to classify. `.env.example` is
-  kept only for consistency / in case an "analyze open text" feature gets
-  added later for Q9/Q10.
+- `netlify/functions/analyze.js` — calls Claude on responses whose open
+  text hasn't been classified yet: Q9 into one of a fixed set of content
+  categories, Q10 into a short free-form topic label (same text reused
+  across similar notes so they group together)
+- Needs `ANTHROPIC_API_KEY` set in Netlify env vars for the Analyze
+  button to work (same key you used for `feedback-triage-tool` works
+  fine here too).
 
 ## Local setup
 

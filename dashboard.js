@@ -1,14 +1,19 @@
+const analyzeBtn = document.getElementById("analyze-btn");
 const refreshBtn = document.getElementById("refresh-btn");
 const locationFilter = document.getElementById("location-filter");
+const roleFilter = document.getElementById("role-filter");
 const exportCsvBtn = document.getElementById("export-csv-btn");
 const statusEl = document.getElementById("status");
+const summaryPanelEl = document.getElementById("summary-panel");
 const statsRowEl = document.getElementById("stats-row");
 const groupsEl = document.getElementById("question-groups");
 
 let allItems = [];
 
+analyzeBtn.addEventListener("click", analyzeOpenAnswers);
 refreshBtn.addEventListener("click", loadItems);
 locationFilter.addEventListener("change", render);
+roleFilter.addEventListener("change", render);
 exportCsvBtn.addEventListener("click", exportCsv);
 
 loadItems();
@@ -27,20 +32,40 @@ async function loadItems() {
   }
 }
 
+async function analyzeOpenAnswers() {
+  analyzeBtn.disabled = true;
+  setStatus("Վերլուծվում է Claude-ի միջոցով...");
+  try {
+    const res = await fetch("/.netlify/functions/analyze", { method: "POST" });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Analysis failed.");
+    allItems = data.items || [];
+    setStatus("Պատրաստ է։", "success");
+    render();
+  } catch (err) {
+    setStatus(err.message, "error");
+  } finally {
+    analyzeBtn.disabled = false;
+  }
+}
+
 function getVisibleItems() {
   const loc = locationFilter.value;
-  return allItems.filter((i) => !loc || i.location === loc);
+  const role = roleFilter.value;
+  return allItems.filter((i) => (!loc || i.location === loc) && (!role || i.role === role));
 }
 
 function render() {
   const visible = getVisibleItems();
 
   if (!visible.length) {
+    summaryPanelEl.hidden = true;
     statsRowEl.innerHTML = "";
     groupsEl.innerHTML = `<p class="empty-state">Պատասխաններ դեռ չկան։</p>`;
     return;
   }
 
+  renderSummary(visible);
   renderStats(visible);
 
   const cards = [
@@ -61,13 +86,25 @@ function render() {
     tallyCard("Ինչպես պատասխանի չաթբոտը", tallyMulti(visible, (i) => i.chatbotAnswerPrefs)),
   ].join("");
 
+  const q9Themed = visible.filter((i) => i.startingSourceTheme);
+  const q9Card = q9Themed.length
+    ? tallyCard("Մեկնարկային աղբյուր՝ ըստ կատեգորիայի (հարց 9)", tally(q9Themed, (i) => i.startingSourceTheme))
+    : `<div class="question-card stagger-in"><h3>Մեկնարկային աղբյուր (հարց 9)</h3><p class="field-hint">Դեռ չի վերլուծվել — սեղմեք «Վերլուծել բաց պատասխանները»</p></div>`;
+
+  const q10Themed = visible.filter((i) => i.otherNotesSubject);
+  const q10Card = q10Themed.length
+    ? tallyCard("Այլ դիտողություններ՝ ըստ թեմայի (հարց 10)", tally(q10Themed, (i) => i.otherNotesSubject))
+    : "";
+
   const openText = `
+    ${q9Card}
     <div class="question-card stagger-in">
-      <h3>Որտեղից սկսել (հարց 9)</h3>
+      <h3>Մեկնարկային աղբյուր — բոլոր պատասխանները (հարց 9)</h3>
       ${openTextList(visible, (i) => i.startingSource)}
     </div>
+    ${q10Card}
     <div class="question-card stagger-in">
-      <h3>Այլ դիտողություններ (հարց 10)</h3>
+      <h3>Այլ դիտողություններ — բոլոր պատասխանները (հարց 10)</h3>
       ${openTextList(
         visible.filter((i) => i.otherNotes),
         (i) => i.otherNotes
@@ -75,6 +112,40 @@ function render() {
     </div>`;
 
   groupsEl.innerHTML = cards + openText;
+}
+
+function renderSummary(visible) {
+  const total = visible.length;
+  const avgLikelihood = visible.reduce((sum, i) => sum + (i.chatbotLikelihood || 0), 0) / total;
+  const chatbotPct = Math.round(
+    (visible.filter((i) => i.preferredSolutions.includes("AI չաթբոտ")).length / total) * 100
+  );
+  const slowPct = Math.round(
+    (visible.filter((i) => i.timeToFind === "10 րոպեից ավելի" || i.timeToFind === "Հաճախ նախընտրում եմ հարցնել գործընկերոջս").length /
+      total) *
+      100
+  );
+
+  const sourceCounts = tallyMulti(visible, (i) => i.infoSources);
+  const topSourceEntry = Object.entries(sourceCounts).sort((a, b) => b[1] - a[1])[0];
+
+  const themed = visible.filter((i) => i.startingSourceTheme);
+  const themeCounts = tally(themed, (i) => i.startingSourceTheme);
+  const topThemeEntry = Object.entries(themeCounts).sort((a, b) => b[1] - a[1])[0];
+
+  let text = `${total} պատասխանից ${slowPct}%-ը նշում է, որ ճիշտ պատասխան գտնելը տևում է 10+ րոպե կամ նախընտրում է հարցնել գործընկերոջը։ `;
+  text += `Հարցվածների ${chatbotPct}%-ը նշել է AI չաթբոտը որպես նախընտրելի լուծումներից մեկը, միջին հավանականությունը՝ ${avgLikelihood.toFixed(1)}/5։ `;
+  if (topSourceEntry) {
+    text += `Ամենահաճախ օգտագործվող աղբյուրը՝ «${topSourceEntry[0]}»։ `;
+  }
+  if (topThemeEntry) {
+    text += `Եթե սկսելու էինք մեկ բաժնից, ամենահաճախ ցանկալի կատեգորիան է՝ «${topThemeEntry[0]}» (${topThemeEntry[1]} պատասխան${themed.length < total ? `, ${total - themed.length} պատասխան դեռ չի վերլուծվել` : ""})։`;
+  } else {
+    text += `Հարց 9-ի պատասխանները դեռ չեն վերլուծվել կատեգորիաների — սեղմեք «Վերլուծել բաց պատասխանները»։`;
+  }
+
+  summaryPanelEl.hidden = false;
+  summaryPanelEl.innerHTML = `<h3>Ամփոփում</h3><p>${escapeHtml(text)}</p>`;
 }
 
 function renderStats(visible) {
@@ -197,7 +268,9 @@ function exportCsv() {
       "Հավանականություն (1-5)",
       "Չաթբոտի պատասխանի նախապատվություն",
       "Որտեղից սկսել",
+      "Սկսելու կատեգորիա",
       "Այլ դիտողություններ",
+      "Դիտողության թեմա",
       "Ուղարկվել է",
     ],
   ];
@@ -213,7 +286,9 @@ function exportCsv() {
       i.chatbotLikelihood,
       i.chatbotAnswerPrefs.join("; "),
       i.startingSource,
+      i.startingSourceTheme || "",
       i.otherNotes || "",
+      i.otherNotesSubject || "",
       i.submittedAt,
     ]);
   }
