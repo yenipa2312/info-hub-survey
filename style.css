@@ -95,6 +95,13 @@
   box-sizing: border-box;
 }
 
+/* The UA's [hidden] rule loses to any class selector that sets display
+   (e.g. .option-group { display: grid }), so hidden groups would still
+   render. Force it. */
+[hidden] {
+  display: none !important;
+}
+
 body {
   margin: 0;
   font-family: var(--font-sans);
@@ -237,6 +244,20 @@ textarea:focus {
 ::placeholder {
   color: var(--text-muted);
   opacity: 0.8;
+}
+
+/* ---- Thank-you page ---- */
+
+.thanks-lead {
+  margin: 0 0 var(--space-3);
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.thanks-body {
+  margin: 0;
+  color: var(--text-muted);
 }
 
 /* ---- Option groups (radio / checkbox lists) ---- */

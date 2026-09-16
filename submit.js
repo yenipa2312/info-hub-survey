@@ -15,6 +15,8 @@ const sourceOtherText = document.getElementById("source-other-text");
 const outlookOtherCheck = document.getElementById("outlook-other-check");
 const outlookOtherText = document.getElementById("outlook-other-text");
 
+const MIN_STARTING_SOURCE_CHARS = 15;
+
 // Q1 -> Q2: show only the role list for the chosen location, disable the
 // other one so it can't submit a stray value and isn't part of validation.
 form.querySelectorAll('input[name="location"]').forEach((input) => {
@@ -82,6 +84,14 @@ form.addEventListener("submit", async (e) => {
     setStatus("Խնդրում ենք նշել՝ ինչ նկատի ունեք «Այլ»-ի տակ 4-րդ հարցում։", "error");
     return;
   }
+  if (sourceOutlook.checked && (!outlookTypes || !outlookTypes.length)) {
+    setStatus("Խնդրում ենք նշել՝ ինչ տեսակի տեղեկատվություն եք փնտրում Outlook նամակագրությունում։", "error");
+    return;
+  }
+  if (sourceOutlook.checked && outlookOtherCheck.checked && !outlookOtherTextValue) {
+    setStatus("Խնդրում ենք նշել՝ ինչ նկատի ունեք «Այլ»-ի տակ Outlook-ի հարցում։", "error");
+    return;
+  }
   if (!preferredSolutions.length) {
     setStatus("Խնդրում ենք ընտրել առնվազն մեկ տարբերակ 6-րդ հարցում։", "error");
     return;
@@ -92,6 +102,10 @@ form.addEventListener("submit", async (e) => {
   }
   if (!startingSource) {
     setStatus("Խնդրում ենք պատասխանել 9-րդ հարցին։", "error");
+    return;
+  }
+  if (startingSource.length < MIN_STARTING_SOURCE_CHARS) {
+    setStatus(`9-րդ հարցի պատասխանը պետք է լինի առնվազն ${MIN_STARTING_SOURCE_CHARS} նիշ։`, "error");
     return;
   }
 
@@ -125,14 +139,7 @@ form.addEventListener("submit", async (e) => {
       throw new Error(data.error || `Request failed with status ${res.status}`);
     }
 
-    form.reset();
-    roleBranch.hidden = true;
-    roleCC.hidden = true;
-    outlookBlock.hidden = true;
-    sourceOtherText.hidden = true;
-    outlookOtherText.hidden = true;
-    roleHint.hidden = false;
-    setStatus("Շնորհակալություն, Ձեր պատասխանները ստացվեցին։", "success");
+    window.location.href = "thanks.html";
   } catch (err) {
     setStatus(err.message, "error");
   } finally {

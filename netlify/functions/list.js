@@ -1,11 +1,11 @@
 // Dashboard endpoint - returns every stored survey response as-is.
 // Aggregation happens client-side in dashboard.js.
 
-const { responseStore } = require("./lib/store");
+const { responseStore, readAllResponses } = require("./lib/store");
 
 exports.handler = async () => {
   const store = responseStore();
-  const items = (await store.get("items", { type: "json" })) || [];
+  const items = await readAllResponses(store);
 
   return {
     statusCode: 200,

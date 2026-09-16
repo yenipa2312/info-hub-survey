@@ -4,6 +4,8 @@
 const { responseStore } = require("./lib/store");
 
 const LOCATIONS = new Set(["Մասնաճյուղում", "Կոնտակտային կենտրոնում"]);
+const OUTLOOK_SOURCE = "Outlook նամակագրություն";
+const MIN_STARTING_SOURCE_CHARS = 15;
 
 exports.handler = async (event) => {
   if (event.httpMethod !== "POST") {
@@ -42,6 +44,9 @@ exports.handler = async (event) => {
   if (!Array.isArray(infoSources) || infoSources.length === 0) {
     return { statusCode: 400, body: JSON.stringify({ error: "infoSources is required" }) };
   }
+  if (infoSources.includes(OUTLOOK_SOURCE) && (!Array.isArray(outlookTypes) || outlookTypes.length === 0)) {
+    return { statusCode: 400, body: JSON.stringify({ error: "outlookTypes is required when Outlook is selected" }) };
+  }
   if (!timeToFind || typeof timeToFind !== "string") {
     return { statusCode: 400, body: JSON.stringify({ error: "timeToFind is required" }) };
   }
@@ -54,15 +59,20 @@ exports.handler = async (event) => {
   if (!Array.isArray(chatbotAnswerPrefs) || chatbotAnswerPrefs.length === 0) {
     return { statusCode: 400, body: JSON.stringify({ error: "chatbotAnswerPrefs is required" }) };
   }
-  if (!startingSource || typeof startingSource !== "string" || !startingSource.trim()) {
-    return { statusCode: 400, body: JSON.stringify({ error: "startingSource is required" }) };
+  if (!startingSource || typeof startingSource !== "string" || startingSource.trim().length < MIN_STARTING_SOURCE_CHARS) {
+    return {
+      statusCode: 400,
+      body: JSON.stringify({ error: `startingSource must be at least ${MIN_STARTING_SOURCE_CHARS} characters` }),
+    };
   }
 
   const store = responseStore();
-  const items = (await store.get("items", { type: "json" })) || [];
+  const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
-  items.push({
-    id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+  // One blob per response - concurrent submissions can't overwrite
+  // each other the way a shared array would.
+  await store.setJSON(`response-${id}`, {
+    id,
     location,
     role,
     name: typeof name === "string" && name.trim() ? name.trim() : null,
@@ -78,8 +88,6 @@ exports.handler = async (event) => {
     otherNotes: typeof otherNotes === "string" && otherNotes.trim() ? otherNotes.trim() : null,
     submittedAt: new Date().toISOString(),
   });
-
-  await store.setJSON("items", items);
 
   return { statusCode: 200, body: JSON.stringify({ ok: true }) };
 };

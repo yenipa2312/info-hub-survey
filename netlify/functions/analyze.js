@@ -7,7 +7,7 @@
 //    same label across similar notes so they cluster together.
 // Only processes responses that don't have these fields yet.
 
-const { responseStore } = require("./lib/store");
+const { responseStore, readAllResponses } = require("./lib/store");
 
 const STARTING_SOURCE_THEMES = [
   "Ապրանքներ/ծառայություններ",
@@ -28,7 +28,7 @@ exports.handler = async () => {
   }
 
   const store = responseStore();
-  const items = (await store.get("items", { type: "json" })) || [];
+  const items = await readAllResponses(store);
   const unanalyzed = items.filter((item) => !item.startingSourceTheme);
 
   if (unanalyzed.length === 0) {
@@ -104,7 +104,14 @@ Respond with ONLY valid JSON (no markdown fences, no commentary), matching each 
       };
     });
 
-    await store.setJSON("items", updated);
+    // Write back only the records that actually changed, each to its own
+    // key - never rewrites the whole set, so a submission landing during
+    // analysis can't be clobbered.
+    await Promise.all(
+      updated
+        .filter((item) => byId.has(item.id))
+        .map((item) => store.setJSON(`response-${item.id}`, item))
+    );
 
     return {
       statusCode: 200,
