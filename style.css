@@ -165,8 +165,8 @@ p {
 .page-header p {
   margin: var(--space-3) 0 0;
   color: var(--text-muted);
-  max-width: 58ch;
   font-size: 1rem;
+  text-align: justify;
 }
 
 /* ---- Panels ---- */
