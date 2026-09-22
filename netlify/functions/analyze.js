@@ -8,6 +8,7 @@
 // Only processes responses that don't have these fields yet.
 
 const { responseStore, readAllResponses } = require("./lib/store");
+const { isAuthorized, UNAUTHORIZED } = require("./lib/auth");
 
 const STARTING_SOURCE_THEMES = [
   "Ապրանքներ/ծառայություններ",
@@ -18,7 +19,9 @@ const STARTING_SOURCE_THEMES = [
   "Այլ",
 ];
 
-exports.handler = async () => {
+exports.handler = async (event) => {
+  if (!isAuthorized(event)) return UNAUTHORIZED;
+
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
     return {

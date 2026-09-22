@@ -8,27 +8,102 @@ const summaryPanelEl = document.getElementById("summary-panel");
 const statsRowEl = document.getElementById("stats-row");
 const groupsEl = document.getElementById("question-groups");
 
+const loginForm = document.getElementById("login-form");
+const passcodeInput = document.getElementById("passcode");
+const loginBtn = document.getElementById("login-btn");
+const loginStatusEl = document.getElementById("login-status");
+const dashboardContentEl = document.getElementById("dashboard-content");
+
+const PASSCODE_KEY = "dashboardPasscode";
+
 let allItems = [];
+let memoryPasscode = null;
 
 analyzeBtn.addEventListener("click", analyzeOpenAnswers);
 refreshBtn.addEventListener("click", loadItems);
 locationFilter.addEventListener("change", render);
 roleFilter.addEventListener("change", render);
 exportCsvBtn.addEventListener("click", exportCsv);
+loginForm.addEventListener("submit", login);
 
-loadItems();
+// Remembered per browser tab only (sessionStorage), so closing the tab
+// logs out - sensible on shared bank machines.
+if (getPasscode()) {
+  loadItems();
+} else {
+  showLogin();
+}
+
+function getPasscode() {
+  try {
+    return sessionStorage.getItem(PASSCODE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function setPasscode(value) {
+  try {
+    if (value) sessionStorage.setItem(PASSCODE_KEY, value);
+    else sessionStorage.removeItem(PASSCODE_KEY);
+  } catch {
+    // storage blocked - the in-memory value still works for this page view
+  }
+  memoryPasscode = value;
+}
+
+function showLogin(message) {
+  dashboardContentEl.hidden = true;
+  loginForm.hidden = false;
+  loginStatusEl.textContent = message || "";
+  loginStatusEl.classList.toggle("error", Boolean(message));
+  passcodeInput.focus();
+}
+
+async function login(e) {
+  e.preventDefault();
+  setPasscode(passcodeInput.value);
+  loginBtn.disabled = true;
+  const ok = await loadItems();
+  loginBtn.disabled = false;
+  if (ok) passcodeInput.value = "";
+}
+
+class UnauthorizedError extends Error {}
+
+async function authedFetch(url, options = {}) {
+  const res = await fetch(url, {
+    ...options,
+    headers: { ...(options.headers || {}), "x-dashboard-passcode": getPasscode() || memoryPasscode || "" },
+  });
+  if (res.status === 401) {
+    setPasscode(null);
+    throw new UnauthorizedError();
+  }
+  return res;
+}
 
 async function loadItems() {
   setStatus("Բեռնվում է...");
   try {
-    const res = await fetch("/.netlify/functions/list");
+    const res = await authedFetch("/.netlify/functions/list");
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Failed to load responses.");
     allItems = data.items || [];
+    loginForm.hidden = true;
+    dashboardContentEl.hidden = false;
     setStatus("");
     render();
+    return true;
   } catch (err) {
-    setStatus(err.message, "error");
+    if (err instanceof UnauthorizedError) {
+      showLogin("Սխալ մուտքի կոդ");
+    } else if (dashboardContentEl.hidden) {
+      showLogin(err.message);
+    } else {
+      setStatus(err.message, "error");
+    }
+    return false;
   }
 }
 
@@ -36,14 +111,15 @@ async function analyzeOpenAnswers() {
   analyzeBtn.disabled = true;
   setStatus("Վերլուծվում է Claude-ի միջոցով...");
   try {
-    const res = await fetch("/.netlify/functions/analyze", { method: "POST" });
+    const res = await authedFetch("/.netlify/functions/analyze", { method: "POST" });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Analysis failed.");
     allItems = data.items || [];
     setStatus("Պատրաստ է։", "success");
     render();
   } catch (err) {
-    setStatus(err.message, "error");
+    if (err instanceof UnauthorizedError) showLogin("Սխալ մուտքի կոդ");
+    else setStatus(err.message, "error");
   } finally {
     analyzeBtn.disabled = false;
   }

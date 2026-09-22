@@ -14,6 +14,14 @@
       <p>Ներքին տեղեկատվական հարթակի հետազոտական հարցման բոլոր պատասխանները։</p>
     </header>
 
+    <form id="login-form" class="panel login-panel" hidden>
+      <label class="field-label" for="passcode">Մուտքի կոդ</label>
+      <input type="password" id="passcode" autocomplete="current-password" required />
+      <button type="submit" class="primary" id="login-btn">Մուտք</button>
+      <p id="login-status" class="status" role="status" aria-live="polite"></p>
+    </form>
+
+    <div id="dashboard-content" hidden>
     <div id="summary-panel" class="panel summary-panel" hidden></div>
 
     <div id="stats-row" class="stats-row"></div>
@@ -48,6 +56,7 @@
     <p id="status" class="status" role="status" aria-live="polite"></p>
 
     <div id="question-groups" class="question-groups"></div>
+    </div>
   </main>
 
   <script src="dashboard.js"></script>
