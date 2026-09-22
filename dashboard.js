@@ -74,13 +74,17 @@ async function login(e) {
 class UnauthorizedError extends Error {}
 
 async function authedFetch(url, options = {}) {
+  // URI-encoded: header values can't hold non-Latin characters, so an
+  // Armenian-layout passcode would otherwise throw before being sent.
+  const passcode = (getPasscode() || memoryPasscode || "").trim();
   const res = await fetch(url, {
     ...options,
-    headers: { ...(options.headers || {}), "x-dashboard-passcode": getPasscode() || memoryPasscode || "" },
+    headers: { ...(options.headers || {}), "x-dashboard-passcode": encodeURIComponent(passcode) },
   });
-  if (res.status === 401) {
+  if (res.status === 401 || res.status === 503) {
     setPasscode(null);
-    throw new UnauthorizedError();
+    const data = await res.json().catch(() => ({}));
+    throw new UnauthorizedError(data.error || "Սխալ մուտքի կոդ");
   }
   return res;
 }
@@ -99,7 +103,7 @@ async function loadItems() {
     return true;
   } catch (err) {
     if (err instanceof UnauthorizedError) {
-      showLogin("Սխալ մուտքի կոդ");
+      showLogin(err.message);
     } else if (dashboardContentEl.hidden) {
       showLogin(err.message);
     } else {
@@ -134,7 +138,7 @@ async function analyzeOpenAnswers() {
     }
     setStatus("Պատրաստ է։", "success");
   } catch (err) {
-    if (err instanceof UnauthorizedError) showLogin("Սխալ մուտքի կոդ");
+    if (err instanceof UnauthorizedError) showLogin(err.message);
     else setStatus(err.message, "error");
   } finally {
     analyzeBtn.disabled = false;
@@ -167,7 +171,7 @@ async function clearAllResponses() {
     render();
     setStatus(`Ջնջվեց ${data.deleted} պատասխան։`, "success");
   } catch (err) {
-    if (err instanceof UnauthorizedError) showLogin("Սխալ մուտքի կոդ");
+    if (err instanceof UnauthorizedError) showLogin(err.message);
     else setStatus(err.message, "error");
   } finally {
     clearBtn.disabled = false;

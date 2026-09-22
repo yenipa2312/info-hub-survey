@@ -3,10 +3,11 @@
 // Aggregation happens client-side in dashboard.js.
 
 const { responseStore, readAllResponses } = require("./lib/store");
-const { isAuthorized, UNAUTHORIZED } = require("./lib/auth");
+const { checkAuth } = require("./lib/auth");
 
 exports.handler = async (event) => {
-  if (!isAuthorized(event)) return UNAUTHORIZED;
+  const denied = checkAuth(event);
+  if (denied) return denied;
 
   const store = responseStore();
   const items = await readAllResponses(store);

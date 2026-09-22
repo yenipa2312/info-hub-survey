@@ -4,10 +4,11 @@
 // request can't trigger it.
 
 const { responseStore } = require("./lib/store");
-const { isAuthorized, UNAUTHORIZED } = require("./lib/auth");
+const { checkAuth } = require("./lib/auth");
 
 exports.handler = async (event) => {
-  if (!isAuthorized(event)) return UNAUTHORIZED;
+  const denied = checkAuth(event);
+  if (denied) return denied;
   if (event.httpMethod !== "POST") {
     return { statusCode: 405, body: JSON.stringify({ error: "Method not allowed" }) };
   }

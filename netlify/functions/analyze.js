@@ -13,7 +13,7 @@
 // function timeout.
 
 const { responseStore, readAllResponses } = require("./lib/store");
-const { isAuthorized, UNAUTHORIZED } = require("./lib/auth");
+const { checkAuth } = require("./lib/auth");
 
 const BATCH_SIZE = 10;
 
@@ -31,7 +31,8 @@ function json(statusCode, body) {
 }
 
 exports.handler = async (event) => {
-  if (!isAuthorized(event)) return UNAUTHORIZED;
+  const denied = checkAuth(event);
+  if (denied) return denied;
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
