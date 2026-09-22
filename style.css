@@ -452,6 +452,15 @@ button.secondary:hover {
   border-color: var(--text-muted);
 }
 
+button.secondary.danger {
+  color: var(--negative-text);
+  border-color: var(--negative-text);
+}
+
+button.secondary.danger:hover {
+  background: var(--negative-bg);
+}
+
 /* ---- Status line ---- */
 
 .status {
