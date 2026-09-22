@@ -3,6 +3,7 @@ const refreshBtn = document.getElementById("refresh-btn");
 const locationFilter = document.getElementById("location-filter");
 const roleFilter = document.getElementById("role-filter");
 const exportCsvBtn = document.getElementById("export-csv-btn");
+const clearBtn = document.getElementById("clear-btn");
 const statusEl = document.getElementById("status");
 const summaryPanelEl = document.getElementById("summary-panel");
 const statsRowEl = document.getElementById("stats-row");
@@ -24,6 +25,7 @@ refreshBtn.addEventListener("click", loadItems);
 locationFilter.addEventListener("change", render);
 roleFilter.addEventListener("change", render);
 exportCsvBtn.addEventListener("click", exportCsv);
+clearBtn.addEventListener("click", clearAllResponses);
 loginForm.addEventListener("submit", login);
 
 // Remembered per browser tab only (sessionStorage), so closing the tab
@@ -111,17 +113,64 @@ async function analyzeOpenAnswers() {
   analyzeBtn.disabled = true;
   setStatus("Վերլուծվում է Claude-ի միջոցով...");
   try {
-    const res = await authedFetch("/.netlify/functions/analyze", { method: "POST" });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Analysis failed.");
-    allItems = data.items || [];
+    // The server analyzes one batch per call; keep calling until nothing
+    // is left. Stop if a call makes no progress, so a response Claude
+    // can't classify can't spin this loop forever.
+    let previousRemaining = Infinity;
+    for (;;) {
+      const res = await authedFetch("/.netlify/functions/analyze", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Analysis failed.");
+      allItems = data.items || [];
+      render();
+
+      const remaining = data.remaining ?? 0;
+      if (remaining === 0) break;
+      if (remaining >= previousRemaining) {
+        throw new Error(`${remaining} պատասխան չհաջողվեց վերլուծել։ Փորձեք կրկին։`);
+      }
+      previousRemaining = remaining;
+      setStatus(`Վերլուծվում է... մնացել է ${remaining} պատասխան`);
+    }
     setStatus("Պատրաստ է։", "success");
-    render();
   } catch (err) {
     if (err instanceof UnauthorizedError) showLogin("Սխալ մուտքի կոդ");
     else setStatus(err.message, "error");
   } finally {
     analyzeBtn.disabled = false;
+  }
+}
+
+async function clearAllResponses() {
+  const total = allItems.length;
+  if (!total) {
+    setStatus("Ջնջելու պատասխաններ չկան։");
+    return;
+  }
+  const ok = window.confirm(
+    `Ջնջե՞լ բոլոր ${total} պատասխանները։\n\nԱյս գործողությունը հնարավոր չէ հետարկել։ ` +
+      `Եթե պետք է պահպանել տվյալները, նախ սեղմեք «Արտահանել CSV»։`
+  );
+  if (!ok) return;
+
+  clearBtn.disabled = true;
+  setStatus("Ջնջվում է...");
+  try {
+    const res = await authedFetch("/.netlify/functions/clear", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ confirm: "DELETE_ALL" }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Delete failed.");
+    allItems = [];
+    render();
+    setStatus(`Ջնջվեց ${data.deleted} պատասխան։`, "success");
+  } catch (err) {
+    if (err instanceof UnauthorizedError) showLogin("Սխալ մուտքի կոդ");
+    else setStatus(err.message, "error");
+  } finally {
+    clearBtn.disabled = false;
   }
 }
 

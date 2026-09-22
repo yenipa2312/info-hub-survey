@@ -5,10 +5,17 @@
 //    other question.
 //  - Q10 (otherNotes) gets a short free-form topic label, reusing the
 //    same label across similar notes so they cluster together.
-// Only processes responses that don't have these fields yet.
+//
+// Processes at most BATCH_SIZE unanalyzed responses per call and reports
+// how many remain; the dashboard calls again until none are left. One
+// big call doesn't work: Armenian output is token-heavy, so ~25+ answers
+// overflow the reply limit, and a long reply can outrun Netlify's ~10s
+// function timeout.
 
 const { responseStore, readAllResponses } = require("./lib/store");
 const { isAuthorized, UNAUTHORIZED } = require("./lib/auth");
+
+const BATCH_SIZE = 10;
 
 const STARTING_SOURCE_THEMES = [
   "Ապրանքներ/ծառայություններ",
@@ -19,15 +26,16 @@ const STARTING_SOURCE_THEMES = [
   "Այլ",
 ];
 
+function json(statusCode, body) {
+  return { statusCode, headers: { "content-type": "application/json" }, body: JSON.stringify(body) };
+}
+
 exports.handler = async (event) => {
   if (!isAuthorized(event)) return UNAUTHORIZED;
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ error: "Server is missing ANTHROPIC_API_KEY. Set it in Netlify env vars." }),
-    };
+    return json(500, { error: "Server is missing ANTHROPIC_API_KEY. Set it in Netlify env vars." });
   }
 
   const store = responseStore();
@@ -35,17 +43,17 @@ exports.handler = async (event) => {
   const unanalyzed = items.filter((item) => !item.startingSourceTheme);
 
   if (unanalyzed.length === 0) {
-    return {
-      statusCode: 200,
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ items }),
-    };
+    return json(200, { items, remaining: 0 });
   }
 
-  const listForPrompt = unanalyzed
+  const batch = unanalyzed.slice(0, BATCH_SIZE);
+
+  // Numbered 1..N instead of the long record ids - shorter prompt, shorter
+  // reply, and nothing for the model to mistype.
+  const listForPrompt = batch
     .map(
-      (item) =>
-        `${item.id}: startingSource: "${item.startingSource}"  otherNotes: ${item.otherNotes ? `"${item.otherNotes}"` : "(no otherNotes)"}`
+      (item, i) =>
+        `${i + 1}: startingSource: "${item.startingSource}"  otherNotes: ${item.otherNotes ? `"${item.otherNotes}"` : "(no otherNotes)"}`
     )
     .join("\n");
 
@@ -53,7 +61,7 @@ exports.handler = async (event) => {
 staff (branch + contact center) about building an internal info-hub
 platform. All text is in Armenian.
 
-For each response below, classify:
+For each numbered response below, classify:
 - "startingSourceTheme": which category the "startingSource" answer
   (their answer to "if we could start with just one information source,
   which one") falls into. One of exactly: ${STARTING_SOURCE_THEMES.join(", ")}
@@ -66,8 +74,8 @@ For each response below, classify:
 Responses:
 ${listForPrompt}
 
-Respond with ONLY valid JSON (no markdown fences, no commentary), matching each item by its exact id:
-{"items":[{"id":"...","startingSourceTheme":"...","otherNotesSubject":"..." or null}]}`;
+Respond with ONLY valid JSON (no markdown fences, no commentary), one entry per response number:
+{"items":[{"n":1,"startingSourceTheme":"...","otherNotesSubject":"..." or null}]}`;
 
   try {
     const response = await fetch("https://api.anthropic.com/v1/messages", {
@@ -86,17 +94,26 @@ Respond with ONLY valid JSON (no markdown fences, no commentary), matching each 
 
     if (!response.ok) {
       const errText = await response.text();
-      return { statusCode: response.status, body: JSON.stringify({ error: `Anthropic API error: ${errText}` }) };
+      return json(response.status, { error: `Anthropic API error: ${errText}` });
     }
 
     const data = await response.json();
+    if (data.stop_reason === "max_tokens") {
+      return json(502, { error: "Claude's reply was cut off before finishing this batch." });
+    }
+
     const raw = data.content?.[0]?.text ?? "{}";
     const cleaned = raw.trim().replace(/^```json\s*/i, "").replace(/^```\s*/, "").replace(/```$/, "");
     const parsed = JSON.parse(cleaned);
 
-    const byId = new Map((parsed.items || []).map((i) => [i.id, i]));
+    const resultsById = new Map();
+    for (const result of parsed.items || []) {
+      const item = batch[Number(result.n) - 1];
+      if (item) resultsById.set(item.id, result);
+    }
+
     const updated = items.map((item) => {
-      const result = byId.get(item.id);
+      const result = resultsById.get(item.id);
       if (!result) return item;
       return {
         ...item,
@@ -112,16 +129,12 @@ Respond with ONLY valid JSON (no markdown fences, no commentary), matching each 
     // analysis can't be clobbered.
     await Promise.all(
       updated
-        .filter((item) => byId.has(item.id))
+        .filter((item) => resultsById.has(item.id))
         .map((item) => store.setJSON(`response-${item.id}`, item))
     );
 
-    return {
-      statusCode: 200,
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ items: updated }),
-    };
+    return json(200, { items: updated, remaining: unanalyzed.length - resultsById.size });
   } catch (err) {
-    return { statusCode: 500, body: JSON.stringify({ error: err.message }) };
+    return json(500, { error: err.message });
   }
 };

@@ -28,7 +28,10 @@ function responseStore() {
 
 // Reads every response. Also picks up anything left in the old single
 // "items" array from before the per-key switch, so no early responses
-// get stranded.
+// get stranded. When analysis updates a legacy record it's saved under
+// its own "response-<id>" key, so the same id can exist in both places -
+// dedupe by id and let the per-key copy win, or that person would be
+// counted twice and the stale copy would look unanalyzed forever.
 async function readAllResponses(store) {
   const legacy = (await store.get("items", { type: "json" })) || [];
 
@@ -37,7 +40,11 @@ async function readAllResponses(store) {
     blobs.map((blob) => store.get(blob.key, { type: "json" }))
   );
 
-  return [...legacy, ...perKey.filter(Boolean)].sort((a, b) =>
+  const byId = new Map();
+  for (const item of legacy) byId.set(item.id, item);
+  for (const item of perKey) if (item) byId.set(item.id, item);
+
+  return [...byId.values()].sort((a, b) =>
     (a.submittedAt || "").localeCompare(b.submittedAt || "")
   );
 }
