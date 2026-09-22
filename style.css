@@ -198,6 +198,17 @@ p {
   margin-bottom: var(--space-1);
 }
 
+.required-mark {
+  color: var(--negative-text);
+  font-weight: 700;
+}
+
+.required-legend {
+  margin: 0 0 var(--space-6);
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
 .field-hint {
   display: block;
   color: var(--text-muted);

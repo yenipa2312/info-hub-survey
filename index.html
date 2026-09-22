@@ -22,10 +22,11 @@
     </header>
 
     <form class="panel" id="survey-form">
+      <p class="required-legend"><span class="required-mark" aria-hidden="true">*</span> — պարտադիր դաշտ</p>
 
       <!-- Q1 -->
       <div class="field">
-        <label class="field-label">1. Որտե՞ղ եք աշխատում</label>
+        <label class="field-label">1. Որտե՞ղ եք աշխատում<span class="required-mark" aria-hidden="true"> *</span></label>
         <div class="option-group" role="radiogroup">
           <label class="option-row">
             <input type="radio" name="location" value="Մասնաճյուղում" required />
@@ -40,7 +41,7 @@
 
       <!-- Q2 -->
       <div class="field">
-        <label class="field-label">2. Պաշտոն</label>
+        <label class="field-label">2. Պաշտոն<span class="required-mark" aria-hidden="true"> *</span></label>
         <span class="field-hint" id="role-hint">Նախ ընտրեք վերևում՝ որտեղ եք աշխատում</span>
 
         <div class="option-group" id="role-branch" hidden>
@@ -94,7 +95,7 @@
 
       <!-- Q4 -->
       <div class="field">
-        <label class="field-label">4. Աշխատանքի ընթացքում որտե՞ղ եք սովորաբար փնտրում անհրաժեշտ տեղեկատվությունը՝ հաճախորդի հարցին պատասխանելու կամ առաջադրանք կատարելու համար։</label>
+        <label class="field-label">4. Աշխատանքի ընթացքում որտե՞ղ եք սովորաբար փնտրում անհրաժեշտ տեղեկատվությունը՝ հաճախորդի հարցին պատասխանելու կամ առաջադրանք կատարելու համար։<span class="required-mark" aria-hidden="true"> *</span></label>
         <span class="field-hint">Ընտրեք բոլոր համապատասխան տարբերակները</span>
         <div class="option-group">
           <label class="option-row">
@@ -117,7 +118,7 @@
         <input type="text" id="source-other-text" class="option-other-input" placeholder="Նշեք՝ ինչ" hidden />
 
         <div class="conditional-block" id="outlook-block" hidden>
-          <label class="field-label">Եթե ընտրել եք Outlook նամակագրություն, ի՞նչ տեսակի տեղեկատվություն եք սովորաբար փնտրում։</label>
+          <label class="field-label">Եթե ընտրել եք Outlook նամակագրություն, ի՞նչ տեսակի տեղեկատվություն եք սովորաբար փնտրում։<span class="required-mark" aria-hidden="true"> *</span></label>
           <span class="field-hint">Ընտրեք բոլոր համապատասխան տարբերակները</span>
           <div class="option-group">
             <label class="option-row">
@@ -147,7 +148,7 @@
 
       <!-- Q5 -->
       <div class="field">
-        <label class="field-label">5. Սովորաբար որքան ժամանակ է անհրաժեշտ ճիշտ պատասխանը գտնելու համար։</label>
+        <label class="field-label">5. Սովորաբար որքան ժամանակ է անհրաժեշտ ճիշտ պատասխանը գտնելու համար։<span class="required-mark" aria-hidden="true"> *</span></label>
         <div class="option-group">
           <label class="option-row">
             <input type="radio" name="timeToFind" value="Մեկ րոպեից քիչ" required />
@@ -170,7 +171,7 @@
 
       <!-- Q6 -->
       <div class="field">
-        <label class="field-label">6. Ձեր կարծիքով ո՞ր տարբերակն է ավելի հարմար օգտագործման համար։</label>
+        <label class="field-label">6. Ձեր կարծիքով ո՞ր տարբերակն է ավելի հարմար օգտագործման համար։<span class="required-mark" aria-hidden="true"> *</span></label>
         <span class="field-hint">Ընտրեք բոլոր համապատասխան տարբերակները</span>
         <div class="option-group">
           <label class="option-row">
@@ -190,7 +191,7 @@
 
       <!-- Q7 -->
       <div class="field">
-        <label class="field-label">7. Եթե չաթբոտը կարողանար ակնթարթորեն պատասխանել աշխատանքային հարցերին, որքանո՞վ հավանական է, որ կօգտվեիք դրանից։</label>
+        <label class="field-label">7. Եթե չաթբոտը կարողանար ակնթարթորեն պատասխանել աշխատանքային հարցերին, որքանո՞վ հավանական է, որ կօգտվեիք դրանից։<span class="required-mark" aria-hidden="true"> *</span></label>
         <div class="rating-scale" role="radiogroup">
           <label class="rating-option"><input type="radio" name="chatbotLikelihood" value="1" required /><span>1</span></label>
           <label class="rating-option"><input type="radio" name="chatbotLikelihood" value="2" /><span>2</span></label>
@@ -206,7 +207,7 @@
 
       <!-- Q8 -->
       <div class="field">
-        <label class="field-label">8. Ինչպե՞ս կցանկանայիք, որ չաթբոտը պատասխանի Ձեր հարցերին։</label>
+        <label class="field-label">8. Ինչպե՞ս կցանկանայիք, որ չաթբոտը պատասխանի Ձեր հարցերին։<span class="required-mark" aria-hidden="true"> *</span></label>
         <span class="field-hint">Ընտրեք բոլոր համապատասխան տարբերակները</span>
         <div class="option-group">
           <label class="option-row">
@@ -222,7 +223,7 @@
 
       <!-- Q9 -->
       <div class="field">
-        <label class="field-label" for="starting-source">9. Եթե համակարգը սկսելու համար անհրաժեշտ լիներ ընտրել միայն մեկ տեղեկատվական աղբյուր, ո՞րն կցանկանայիք, որ դա լիներ։</label>
+        <label class="field-label" for="starting-source">9. Եթե համակարգը սկսելու համար անհրաժեշտ լիներ ընտրել միայն մեկ տեղեկատվական աղբյուր, ո՞րն կցանկանայիք, որ դա լիներ։<span class="required-mark" aria-hidden="true"> *</span></label>
         <span class="field-hint">Նվազագույնը 15 նիշ</span>
         <textarea id="starting-source" name="startingSource" required></textarea>
       </div>
