@@ -5,7 +5,6 @@ const roleFilter = document.getElementById("role-filter");
 const exportCsvBtn = document.getElementById("export-csv-btn");
 const clearBtn = document.getElementById("clear-btn");
 const statusEl = document.getElementById("status");
-const summaryPanelEl = document.getElementById("summary-panel");
 const statsRowEl = document.getElementById("stats-row");
 const groupsEl = document.getElementById("question-groups");
 
@@ -188,13 +187,11 @@ function render() {
   const visible = getVisibleItems();
 
   if (!visible.length) {
-    summaryPanelEl.hidden = true;
     statsRowEl.innerHTML = "";
     groupsEl.innerHTML = `<p class="empty-state">Պատասխաններ դեռ չկան։</p>`;
     return;
   }
 
-  renderSummary(visible);
   renderStats(visible);
 
   const cards = [
@@ -241,40 +238,6 @@ function render() {
     </div>`;
 
   groupsEl.innerHTML = cards + openText;
-}
-
-function renderSummary(visible) {
-  const total = visible.length;
-  const avgLikelihood = visible.reduce((sum, i) => sum + (i.chatbotLikelihood || 0), 0) / total;
-  const chatbotPct = Math.round(
-    (visible.filter((i) => i.preferredSolutions.includes("AI չաթբոտ")).length / total) * 100
-  );
-  const slowPct = Math.round(
-    (visible.filter((i) => i.timeToFind === "10 րոպեից ավելի" || i.timeToFind === "Հաճախ նախընտրում եմ հարցնել գործընկերոջս").length /
-      total) *
-      100
-  );
-
-  const sourceCounts = tallyMulti(visible, (i) => i.infoSources);
-  const topSourceEntry = Object.entries(sourceCounts).sort((a, b) => b[1] - a[1])[0];
-
-  const themed = visible.filter((i) => i.startingSourceTheme);
-  const themeCounts = tally(themed, (i) => i.startingSourceTheme);
-  const topThemeEntry = Object.entries(themeCounts).sort((a, b) => b[1] - a[1])[0];
-
-  let text = `${total} պատասխանից ${slowPct}%-ը նշում է, որ ճիշտ պատասխան գտնելը տևում է 10+ րոպե կամ նախընտրում է հարցնել գործընկերոջը։ `;
-  text += `Հարցվածների ${chatbotPct}%-ը նշել է AI չաթբոտը որպես նախընտրելի լուծումներից մեկը, միջին հավանականությունը՝ ${avgLikelihood.toFixed(1)}/5։ `;
-  if (topSourceEntry) {
-    text += `Ամենահաճախ օգտագործվող աղբյուրը՝ «${topSourceEntry[0]}»։ `;
-  }
-  if (topThemeEntry) {
-    text += `Եթե սկսելու էինք մեկ բաժնից, ամենահաճախ ցանկալի կատեգորիան է՝ «${topThemeEntry[0]}» (${topThemeEntry[1]} պատասխան${themed.length < total ? `, ${total - themed.length} պատասխան դեռ չի վերլուծվել` : ""})։`;
-  } else {
-    text += `Հարց 9-ի պատասխանները դեռ չեն վերլուծվել կատեգորիաների — սեղմեք «Վերլուծել բաց պատասխանները»։`;
-  }
-
-  summaryPanelEl.hidden = false;
-  summaryPanelEl.innerHTML = `<h3>Ամփոփում</h3><p>${escapeHtml(text)}</p>`;
 }
 
 function renderStats(visible) {
