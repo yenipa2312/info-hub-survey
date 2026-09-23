@@ -232,6 +232,12 @@ p {
   margin-bottom: var(--space-1);
 }
 
+.detail-label {
+  margin-top: var(--space-3);
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
 .required-mark {
   color: var(--negative-text);
   font-weight: 700;

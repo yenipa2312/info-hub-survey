@@ -5,7 +5,17 @@ const { responseStore } = require("./lib/store");
 
 const LOCATIONS = new Set(["Մասնաճյուղում", "Կոնտակտային կենտրոնում"]);
 const OUTLOOK_SOURCE = "Outlook նամակագրություն";
-const MIN_STARTING_SOURCE_CHARS = 15;
+
+// Q9 is now a single choice from these categories, so the answer IS the
+// category - no Claude classification needed for it any more.
+const STARTING_SOURCES = new Set([
+  "Ապրանքներ/ծառայություններ",
+  "Ընթացակարգեր",
+  "Արշավներ/առաջարկներ",
+  "Ներքին նորություններ/որոշումներ",
+  "Համակարգեր/տեխնիկական խնդիրներ",
+  "Այլ",
+]);
 
 exports.handler = async (event) => {
   if (event.httpMethod !== "POST") {
@@ -32,6 +42,7 @@ exports.handler = async (event) => {
     chatbotLikelihood,
     chatbotAnswerPrefs,
     startingSource,
+    startingSourceDetail,
     otherNotes,
   } = body;
 
@@ -59,11 +70,8 @@ exports.handler = async (event) => {
   if (!Array.isArray(chatbotAnswerPrefs) || chatbotAnswerPrefs.length === 0) {
     return { statusCode: 400, body: JSON.stringify({ error: "chatbotAnswerPrefs is required" }) };
   }
-  if (!startingSource || typeof startingSource !== "string" || startingSource.trim().length < MIN_STARTING_SOURCE_CHARS) {
-    return {
-      statusCode: 400,
-      body: JSON.stringify({ error: `startingSource must be at least ${MIN_STARTING_SOURCE_CHARS} characters` }),
-    };
+  if (!STARTING_SOURCES.has(startingSource)) {
+    return { statusCode: 400, body: JSON.stringify({ error: "startingSource must be one of the listed categories" }) };
   }
 
   const store = responseStore();
@@ -84,7 +92,12 @@ exports.handler = async (event) => {
     preferredSolutions,
     chatbotLikelihood,
     chatbotAnswerPrefs,
-    startingSource: startingSource.trim(),
+    startingSource,
+    // The chosen category is the theme - charts work immediately, with
+    // no Analyze step and no classification error.
+    startingSourceTheme: startingSource,
+    startingSourceDetail:
+      typeof startingSourceDetail === "string" && startingSourceDetail.trim() ? startingSourceDetail.trim() : null,
     otherNotes: typeof otherNotes === "string" && otherNotes.trim() ? otherNotes.trim() : null,
     submittedAt: new Date().toISOString(),
   });

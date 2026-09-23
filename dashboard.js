@@ -223,8 +223,8 @@ function render() {
 
   const q9Themed = visible.filter((i) => i.startingSourceTheme);
   const q9Card = q9Themed.length
-    ? donutCard("Մեկնարկային աղբյուր՝ ըստ կատեգորիայի (հարց 9)", tally(q9Themed, (i) => i.startingSourceTheme), q9Themed.length)
-    : `<div class="question-card stagger-in"><h3>Մեկնարկային աղբյուր (հարց 9)</h3><p class="field-hint">Դեռ չի վերլուծվել — սեղմեք «Վերլուծել բաց պատասխանները»</p></div>`;
+    ? donutCard("Մեկնարկային աղբյուր (հարց 9)", tally(q9Themed, (i) => i.startingSourceTheme), q9Themed.length)
+    : "";
 
   const q10Themed = visible.filter((i) => i.otherNotesSubject);
   const q10Card = q10Themed.length
@@ -234,8 +234,11 @@ function render() {
   const openText = `
     ${q9Card}
     <div class="question-card stagger-in">
-      <h3>Մեկնարկային աղբյուր — բոլոր պատասխանները (հարց 9)</h3>
-      ${openTextList(visible, (i) => i.startingSource)}
+      <h3>Մեկնարկային աղբյուր — մանրամասնումներ (հարց 9)</h3>
+      ${openTextList(
+        visible.filter((i) => i.startingSourceDetail),
+        (i) => `${i.startingSourceDetail} (${i.startingSource})`
+      )}
     </div>
     ${q10Card}
     <div class="question-card stagger-in">
@@ -443,6 +446,7 @@ function exportCsv() {
       "Հավանականություն (1-5)",
       "Չաթբոտի պատասխանի նախապատվություն",
       "Որտեղից սկսել",
+      "Մանրամասնում",
       "Սկսելու կատեգորիա",
       "Այլ դիտողություններ",
       "Դիտողության թեմա",
@@ -461,7 +465,7 @@ function exportCsv() {
       i.chatbotLikelihood,
       i.chatbotAnswerPrefs.join("; "),
       i.startingSource,
-      i.startingSourceTheme || "",
+      i.startingSourceDetail || "",
       i.otherNotes || "",
       i.otherNotesSubject || "",
       i.submittedAt,

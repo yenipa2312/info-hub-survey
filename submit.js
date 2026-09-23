@@ -15,7 +15,6 @@ const sourceOtherText = document.getElementById("source-other-text");
 const outlookOtherCheck = document.getElementById("outlook-other-check");
 const outlookOtherText = document.getElementById("outlook-other-text");
 
-const MIN_STARTING_SOURCE_CHARS = 15;
 
 // Q1 -> Q2: show only the role list for the chosen location, disable the
 // other one so it can't submit a stray value and isn't part of validation.
@@ -69,7 +68,8 @@ form.addEventListener("submit", async (e) => {
   const chatbotLikelihoodChecked = form.querySelector('input[name="chatbotLikelihood"]:checked');
   const chatbotLikelihood = chatbotLikelihoodChecked ? Number(chatbotLikelihoodChecked.value) : null;
   const chatbotAnswerPrefs = checkedValues("chatbotAnswerPrefs");
-  const startingSource = form.startingSource.value.trim();
+  const startingSource = form.querySelector('input[name="startingSource"]:checked')?.value || "";
+  const startingSourceDetail = form.startingSourceDetail.value.trim();
   const otherNotes = form.otherNotes.value.trim();
 
   if (!role) {
@@ -101,11 +101,7 @@ form.addEventListener("submit", async (e) => {
     return;
   }
   if (!startingSource) {
-    setStatus("Խնդրում ենք պատասխանել 9-րդ հարցին։", "error");
-    return;
-  }
-  if (startingSource.length < MIN_STARTING_SOURCE_CHARS) {
-    setStatus(`9-րդ հարցի պատասխանը պետք է լինի առնվազն ${MIN_STARTING_SOURCE_CHARS} նիշ։`, "error");
+    setStatus("Խնդրում ենք ընտրել տարբերակ 9-րդ հարցում։", "error");
     return;
   }
 
@@ -129,6 +125,7 @@ form.addEventListener("submit", async (e) => {
         chatbotLikelihood,
         chatbotAnswerPrefs,
         startingSource,
+        startingSourceDetail,
         otherNotes,
       }),
     });

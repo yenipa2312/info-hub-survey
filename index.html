@@ -223,9 +223,35 @@
 
       <!-- Q9 -->
       <div class="field">
-        <label class="field-label" for="starting-source">9. Եթե համակարգը սկսելու համար անհրաժեշտ լիներ ընտրել միայն մեկ տեղեկատվական աղբյուր, ո՞րն կցանկանայիք, որ դա լիներ։<span class="required-mark" aria-hidden="true"> *</span></label>
-        <span class="field-hint">Նվազագույնը 15 նիշ</span>
-        <textarea id="starting-source" name="startingSource" required></textarea>
+        <label class="field-label">9. Եթե համակարգը սկսելու համար անհրաժեշտ լիներ ընտրել միայն մեկ տեղեկատվական աղբյուր, ո՞րն կցանկանայիք, որ դա լիներ։<span class="required-mark" aria-hidden="true"> *</span></label>
+        <div class="option-group" role="radiogroup">
+          <label class="option-row">
+            <input type="radio" name="startingSource" value="Ապրանքներ/ծառայություններ" required />
+            <span>Ապրանքներ/ծառայություններ</span>
+          </label>
+          <label class="option-row">
+            <input type="radio" name="startingSource" value="Ընթացակարգեր" />
+            <span>Ընթացակարգեր</span>
+          </label>
+          <label class="option-row">
+            <input type="radio" name="startingSource" value="Արշավներ/առաջարկներ" />
+            <span>Արշավներ/առաջարկներ</span>
+          </label>
+          <label class="option-row">
+            <input type="radio" name="startingSource" value="Ներքին նորություններ/որոշումներ" />
+            <span>Ներքին նորություններ/որոշումներ</span>
+          </label>
+          <label class="option-row">
+            <input type="radio" name="startingSource" value="Համակարգեր/տեխնիկական խնդիրներ" />
+            <span>Համակարգեր/տեխնիկական խնդիրներ</span>
+          </label>
+          <label class="option-row">
+            <input type="radio" name="startingSource" value="Այլ" />
+            <span>Այլ</span>
+          </label>
+        </div>
+        <label class="field-label detail-label" for="starting-source-detail">Մանրամասնեք (ըստ ցանկության)</label>
+        <textarea id="starting-source-detail" name="startingSourceDetail"></textarea>
       </div>
 
       <!-- Q10 -->

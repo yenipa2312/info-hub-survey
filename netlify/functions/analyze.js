@@ -1,30 +1,17 @@
-// Dashboard endpoint - turns the two open-text questions into metrics:
-//  - Q9 (startingSource) gets classified into a fixed category, matching
-//    the platform's own content areas (products, procedures, campaigns,
-//    internal news, systems, other) - so it can be charted like every
-//    other question.
-//  - Q10 (otherNotes) gets a short free-form topic label, reusing the
-//    same label across similar notes so they cluster together.
+// Dashboard endpoint - gives Q10 (otherNotes, free text) a short topic
+// label, reusing the same label across similar notes so they cluster into
+// a chart. Q9 is a single choice now, so it needs no classification: the
+// chosen category is stored as its theme at submit time.
 //
-// Processes at most BATCH_SIZE unanalyzed responses per call and reports
-// how many remain; the dashboard calls again until none are left. One
-// big call doesn't work: Armenian output is token-heavy, so ~25+ answers
-// overflow the reply limit, and a long reply can outrun Netlify's ~10s
-// function timeout.
+// Processes at most BATCH_SIZE notes per call and reports how many
+// remain; the dashboard calls again until none are left. One big call
+// doesn't work: Armenian output is token-heavy, so many notes overflow
+// the reply limit, and a long reply can outrun Netlify's ~10s timeout.
 
 const { responseStore, readAllResponses } = require("./lib/store");
 const { checkAuth } = require("./lib/auth");
 
 const BATCH_SIZE = 10;
-
-const STARTING_SOURCE_THEMES = [
-  "Ապրանքներ/ծառայություններ",
-  "Ընթացակարգեր",
-  "Արշավներ/առաջարկներ",
-  "Ներքին նորություններ/որոշումներ",
-  "Համակարգեր/տեխնիկական խնդիրներ",
-  "Այլ",
-];
 
 function json(statusCode, body) {
   return { statusCode, headers: { "content-type": "application/json" }, body: JSON.stringify(body) };
@@ -41,7 +28,7 @@ exports.handler = async (event) => {
 
   const store = responseStore();
   const items = await readAllResponses(store);
-  const unanalyzed = items.filter((item) => !item.startingSourceTheme);
+  const unanalyzed = items.filter((item) => item.otherNotes && !item.otherNotesSubject);
 
   if (unanalyzed.length === 0) {
     return json(200, { items, remaining: 0 });
@@ -51,32 +38,23 @@ exports.handler = async (event) => {
 
   // Numbered 1..N instead of the long record ids - shorter prompt, shorter
   // reply, and nothing for the model to mistype.
-  const listForPrompt = batch
-    .map(
-      (item, i) =>
-        `${i + 1}: startingSource: "${item.startingSource}"  otherNotes: ${item.otherNotes ? `"${item.otherNotes}"` : "(no otherNotes)"}`
-    )
-    .join("\n");
+  const listForPrompt = batch.map((item, i) => `${i + 1}: "${item.otherNotes}"`).join("\n");
 
-  const prompt = `You are analyzing an internal discovery survey for a bank's front-line
-staff (branch + contact center) about building an internal info-hub
-platform. All text is in Armenian.
+  const prompt = `You are analyzing free-text comments from an internal discovery survey
+for a bank's front-line staff (branch + contact center) about building an
+internal info-hub platform. The comments answer "is there anything else we
+should know before designing this?". All text is in Armenian.
 
-For each numbered response below, classify:
-- "startingSourceTheme": which category the "startingSource" answer
-  (their answer to "if we could start with just one information source,
-  which one") falls into. One of exactly: ${STARTING_SOURCE_THEMES.join(", ")}
-- "otherNotesSubject": if "otherNotes" is present (not "(no otherNotes)"),
-  a short (2-5 word) Armenian label for its topic. If two or more
-  responses raise the same underlying point, use the EXACT SAME label
-  text for all of them so they can be grouped together. If otherNotes is
-  "(no otherNotes)", use null.
+For each numbered comment below, give:
+- "otherNotesSubject": a short (2-5 word) Armenian label for its topic. If
+  two or more comments raise the same underlying point, use the EXACT SAME
+  label text for all of them so they can be grouped together.
 
-Responses:
+Comments:
 ${listForPrompt}
 
-Respond with ONLY valid JSON (no markdown fences, no commentary), one entry per response number:
-{"items":[{"n":1,"startingSourceTheme":"...","otherNotesSubject":"..." or null}]}`;
+Respond with ONLY valid JSON (no markdown fences, no commentary), one entry per comment number:
+{"items":[{"n":1,"otherNotesSubject":"..."}]}`;
 
   try {
     const response = await fetch("https://api.anthropic.com/v1/messages", {
@@ -116,13 +94,9 @@ Respond with ONLY valid JSON (no markdown fences, no commentary), one entry per 
     const updated = items.map((item) => {
       const result = resultsById.get(item.id);
       if (!result) return item;
-      return {
-        ...item,
-        startingSourceTheme: STARTING_SOURCE_THEMES.includes(result.startingSourceTheme)
-          ? result.startingSourceTheme
-          : "Այլ",
-        otherNotesSubject: result.otherNotesSubject || null,
-      };
+      // Falls back to "Այլ" rather than null: a null would leave the note
+      // looking unanalyzed forever and stall the dashboard's loop.
+      return { ...item, otherNotesSubject: result.otherNotesSubject || "Այլ" };
     });
 
     // Write back only the records that actually changed, each to its own
