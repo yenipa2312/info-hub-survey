@@ -194,32 +194,41 @@ function render() {
 
   renderStats(visible);
 
+  const total = visible.length;
+  const outlookUsers = visible.filter((i) => i.outlookTypes && i.outlookTypes.length);
+
+  // Donuts for single-choice questions (shares of one whole), bars for
+  // multi-select (people pick several, so shares wouldn't add to 100%),
+  // columns for the 1-5 scale.
   const cards = [
-    tallyCard("Աշխատավայր", tally(visible, (i) => i.location)),
-    tallyCard("Պաշտոն", tally(visible, (i) => i.role)),
-    tallyCard("Որտեղ են փնտրում անհրաժեշտ տեղեկատվությունը", tallyMulti(visible, (i) => i.infoSources)),
+    donutCard("Աշխատավայր", tally(visible, (i) => i.location), total),
+    tallyCard("Պաշտոն", tally(visible, (i) => i.role), total),
+    tallyCard("Որտեղ են փնտրում անհրաժեշտ տեղեկատվությունը", tallyMulti(visible, (i) => i.infoSources), total, "Հնարավոր է մեկից ավելի պատասխան"),
     tallyCard(
       "Outlook նամակագրության դեպքում՝ ինչ տեսակի տեղեկատվություն",
-      tallyMulti(
-        visible.filter((i) => i.outlookTypes && i.outlookTypes.length),
-        (i) => i.outlookTypes
-      ),
-      "Ցուցադրված է միայն նրանց մեջ, ովքեր նշել են Outlook նամակագրությունը"
+      tallyMulti(outlookUsers, (i) => i.outlookTypes),
+      outlookUsers.length,
+      "Միայն նրանց մեջ, ովքեր նշել են Outlook նամակագրությունը"
     ),
-    tallyCard("Պատասխան գտնելու ժամանակը", tally(visible, (i) => i.timeToFind)),
-    tallyCard("Նախընտրելի լուծում", tallyMulti(visible, (i) => i.preferredSolutions)),
-    tallyCard("Չաթբոտի օգտագործման հավանականություն (1–5)", tally(visible, (i) => String(i.chatbotLikelihood)), null, ["1", "2", "3", "4", "5"]),
-    tallyCard("Ինչպես պատասխանի չաթբոտը", tallyMulti(visible, (i) => i.chatbotAnswerPrefs)),
+    donutCard("Պատասխան գտնելու ժամանակը", tally(visible, (i) => i.timeToFind), total),
+    tallyCard("Նախընտրելի լուծում", tallyMulti(visible, (i) => i.preferredSolutions), total, "Հնարավոր է մեկից ավելի պատասխան"),
+    columnCard(
+      "Չաթբոտի օգտագործման հավանականություն (1–5)",
+      tally(visible, (i) => String(i.chatbotLikelihood)),
+      total,
+      visible.reduce((sum, i) => sum + (i.chatbotLikelihood || 0), 0) / total
+    ),
+    tallyCard("Ինչպես պատասխանի չաթբոտը", tallyMulti(visible, (i) => i.chatbotAnswerPrefs), total, "Հնարավոր է մեկից ավելի պատասխան"),
   ].join("");
 
   const q9Themed = visible.filter((i) => i.startingSourceTheme);
   const q9Card = q9Themed.length
-    ? tallyCard("Մեկնարկային աղբյուր՝ ըստ կատեգորիայի (հարց 9)", tally(q9Themed, (i) => i.startingSourceTheme))
+    ? donutCard("Մեկնարկային աղբյուր՝ ըստ կատեգորիայի (հարց 9)", tally(q9Themed, (i) => i.startingSourceTheme), q9Themed.length)
     : `<div class="question-card stagger-in"><h3>Մեկնարկային աղբյուր (հարց 9)</h3><p class="field-hint">Դեռ չի վերլուծվել — սեղմեք «Վերլուծել բաց պատասխանները»</p></div>`;
 
   const q10Themed = visible.filter((i) => i.otherNotesSubject);
   const q10Card = q10Themed.length
-    ? tallyCard("Այլ դիտողություններ՝ ըստ թեմայի (հարց 10)", tally(q10Themed, (i) => i.otherNotesSubject))
+    ? tallyCard("Այլ դիտողություններ՝ ըստ թեմայի (հարց 10)", tally(q10Themed, (i) => i.otherNotesSubject), q10Themed.length)
     : "";
 
   const openText = `
@@ -253,14 +262,16 @@ function renderStats(visible) {
     { value: total, label: "Պատասխանների քանակ" },
     { value: avgLikelihood, label: "Միջին հավանականություն (1–5)" },
     { value: `${chatbotPct}%`, label: "Նախընտրում են AI չաթբոտ" },
-    { value: topSource ? topSource[0] : "—", label: "Ամենահաճախ օգտագործվող աղբյուր" },
+    // A source name is long text, not a number - it needs to wrap at a
+    // smaller size instead of overflowing the tile.
+    { value: topSource ? topSource[0] : "—", label: "Ամենահաճախ օգտագործվող աղբյուր", text: true },
   ];
 
   statsRowEl.innerHTML = tiles
     .map(
-      (t) => `
-      <div class="stat-tile">
-        <div class="stat-value">${escapeHtml(String(t.value))}</div>
+      (t, i) => `
+      <div class="stat-tile" style="--tile-accent: var(--chart-${i + 1})">
+        <div class="stat-value${t.text ? " text" : ""}">${escapeHtml(String(t.value))}</div>
         <div class="stat-label">${escapeHtml(t.label)}</div>
       </div>`
     )
@@ -288,38 +299,110 @@ function tallyMulti(items, getValues) {
   return counts;
 }
 
-function tallyCard(title, counts, note, forcedOrder) {
-  const entries = forcedOrder
-    ? forcedOrder.map((k) => [k, counts[k] || 0])
-    : Object.entries(counts).sort((a, b) => b[1] - a[1]);
+const CHART_COLORS = 6;
 
-  if (!entries.length || entries.every(([, c]) => c === 0)) {
-    return `
-      <div class="question-card stagger-in">
-        <h3>${escapeHtml(title)}</h3>
-        <p class="empty-state">Տվյալ չկա</p>
-      </div>`;
-  }
+function cardShell(title, note, body) {
+  return `
+    <div class="question-card stagger-in">
+      <h3>${escapeHtml(title)}</h3>
+      ${note ? `<p class="field-hint">${escapeHtml(note)}</p>` : ""}
+      ${body}
+    </div>`;
+}
+
+function pct(count, total) {
+  return total ? Math.round((count / total) * 100) : 0;
+}
+
+// Horizontal bars - used for multi-select questions and long option lists.
+function tallyCard(title, counts, total, note) {
+  const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  if (!entries.length) return cardShell(title, note, `<p class="empty-state">Տվյալ չկա</p>`);
 
   const max = Math.max(...entries.map(([, c]) => c), 1);
-
   const rows = entries
     .map(
       ([label, count]) => `
       <div class="bar-row">
         <span class="bar-label">${escapeHtml(label)}</span>
         <span class="bar-track"><span class="bar-fill" style="width:${(count / max) * 100}%"></span></span>
-        <span class="bar-count">${count}</span>
+        <span class="bar-count">${count} · ${pct(count, total)}%</span>
       </div>`
     )
     .join("");
 
-  return `
-    <div class="question-card stagger-in">
-      <h3>${escapeHtml(title)}</h3>
-      ${note ? `<p class="field-hint">${escapeHtml(note)}</p>` : ""}
-      ${rows}
-    </div>`;
+  return cardShell(title, note, rows);
+}
+
+// Donut - single-choice questions, where the slices really do make a whole.
+function donutCard(title, counts, total, note) {
+  const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  if (!entries.length) return cardShell(title, note, `<p class="empty-state">Տվյալ չկա</p>`);
+
+  // r chosen so the circumference is 100 - each slice's dasharray is then
+  // simply its percentage.
+  const r = 15.915;
+  let offset = 25; // start at 12 o'clock
+  const segments = entries
+    .map(([label, count], i) => {
+      const share = total ? (count / total) * 100 : 0;
+      const circle = `<circle class="donut-seg" cx="21" cy="21" r="${r}" fill="none"
+        stroke="var(--chart-${(i % CHART_COLORS) + 1})" stroke-width="6"
+        stroke-dasharray="${share} ${100 - share}" stroke-dashoffset="${offset}"><title>${escapeHtml(label)}: ${count}</title></circle>`;
+      offset = (offset - share + 100) % 100;
+      return circle;
+    })
+    .join("");
+
+  const legend = entries
+    .map(
+      ([label, count], i) => `
+      <div class="legend-row">
+        <span class="legend-dot" style="background: var(--chart-${(i % CHART_COLORS) + 1})"></span>
+        <span class="legend-label">${escapeHtml(label)}</span>
+        <span class="legend-value">${count} · ${pct(count, total)}%</span>
+      </div>`
+    )
+    .join("");
+
+  return cardShell(
+    title,
+    note,
+    `<div class="donut-wrap">
+       <svg class="donut" viewBox="0 0 42 42" role="img" aria-label="${escapeHtml(title)}">
+         <circle cx="21" cy="21" r="${r}" fill="none" stroke="var(--surface-recessed)" stroke-width="6"></circle>
+         ${segments}
+         <text class="donut-center" x="21" y="21.5" text-anchor="middle" dominant-baseline="middle">${total}</text>
+       </svg>
+       <div class="legend">${legend}</div>
+     </div>`
+  );
+}
+
+// Vertical columns - the 1-5 rating, where the order of the scale matters.
+function columnCard(title, counts, total, average) {
+  const scale = ["1", "2", "3", "4", "5"];
+  const values = scale.map((k) => counts[k] || 0);
+  const max = Math.max(...values, 1);
+
+  const columns = scale
+    .map(
+      (label, i) => `
+      <div class="column">
+        <span class="column-value">${values[i]}</span>
+        <div class="column-bar" style="height:${(values[i] / max) * 100}%"></div>
+        <span class="column-label">${label}</span>
+        <span class="column-pct">${pct(values[i], total)}%</span>
+      </div>`
+    )
+    .join("");
+
+  return cardShell(
+    title,
+    null,
+    `<div class="column-chart">${columns}</div>
+     <p class="chart-caption">Միջինը՝ ${average.toFixed(1)} / 5 &nbsp;·&nbsp; 1 — բոլորովին հավանական չէ, 5 — շատ հավանական է</p>`
+  );
 }
 
 function openTextList(items, getText) {

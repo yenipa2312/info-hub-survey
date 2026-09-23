@@ -91,6 +91,40 @@
   }
 }
 
+/* The survey stays on brand - that's what staff see. The dashboard is an
+   internal analysis tool, so it gets neutral surfaces and a colourful
+   categorical chart palette (Okabe-Ito: distinguishable for the common
+   forms of colour blindness). */
+body.analytics {
+  --bg: #f6f7f9;
+  --surface: var(--brand-white);
+  --surface-recessed: #eef0f3;
+  --border: #dfe3e8;
+
+  --chart-1: #0072b2;
+  --chart-2: #e69f00;
+  --chart-3: #009e73;
+  --chart-4: #cc79a7;
+  --chart-5: #56b4e9;
+  --chart-6: #d55e00;
+}
+
+@media (prefers-color-scheme: dark) {
+  body.analytics {
+    --bg: #14161a;
+    --surface: #1d2025;
+    --surface-recessed: #171a1e;
+    --border: #2e333a;
+
+    --chart-1: #4ea6e0;
+    --chart-2: #f0b84d;
+    --chart-3: #3fc79a;
+    --chart-4: #e093bd;
+    --chart-5: #7fc9f2;
+    --chart-6: #ef7f43;
+  }
+}
+
 * {
   box-sizing: border-box;
 }
@@ -514,6 +548,7 @@ button.secondary.danger:hover {
 .stat-tile {
   background: var(--surface);
   border: 1px solid var(--border);
+  border-top: 3px solid var(--tile-accent, var(--border));
   border-radius: var(--radius-panel);
   padding: var(--space-4);
 }
@@ -523,6 +558,15 @@ button.secondary.danger:hover {
   font-weight: 700;
   line-height: 1.1;
   letter-spacing: -0.01em;
+  color: var(--tile-accent, var(--text));
+}
+
+/* Long text values (e.g. a source name) wrap instead of overflowing. */
+.stat-value.text {
+  font-size: 0.95rem;
+  line-height: 1.35;
+  letter-spacing: 0;
+  overflow-wrap: anywhere;
 }
 
 .stat-label {
@@ -591,8 +635,9 @@ button.secondary.danger:hover {
 
 .bar-fill {
   height: 100%;
-  background: var(--accent-solid);
+  background: var(--chart-1);
   border-radius: var(--radius-full);
+  transition: width var(--dur-base) var(--ease-out);
 }
 
 .bar-count {
@@ -601,6 +646,105 @@ button.secondary.danger:hover {
   white-space: nowrap;
   min-width: 3.5em;
   text-align: right;
+}
+
+/* ---- Donut chart ---- */
+
+.donut-wrap {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+  flex-wrap: wrap;
+}
+
+.donut {
+  width: 132px;
+  height: 132px;
+  flex-shrink: 0;
+}
+
+.donut-center {
+  font-size: 8px;
+  font-weight: 700;
+  fill: var(--text);
+  font-family: var(--font-heading);
+}
+
+.legend {
+  display: grid;
+  gap: 6px;
+  flex: 1;
+  min-width: 220px;
+}
+
+.legend-row {
+  display: grid;
+  grid-template-columns: 10px 1fr auto;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 0.86rem;
+}
+
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.legend-value {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+/* ---- Column chart ---- */
+
+.column-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-3);
+  height: 170px;
+  padding-top: var(--space-3);
+}
+
+.column {
+  flex: 1;
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto 1fr auto auto;
+  justify-items: center;
+  gap: 4px;
+}
+
+.column-value {
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.column-bar {
+  width: 100%;
+  max-width: 56px;
+  min-height: 2px;
+  background: var(--chart-1);
+  border-radius: 6px 6px 0 0;
+  align-self: end;
+  transition: height var(--dur-base) var(--ease-out);
+}
+
+.column-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.column-pct {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.chart-caption {
+  margin: var(--space-3) 0 0;
+  font-size: 0.78rem;
+  color: var(--text-muted);
 }
 
 .open-text-list {
